@@ -33,7 +33,6 @@ char W2[] = "L998,U662,R342,U104,R140,U92,R67,D102,L225,U265,R641,U592,L295,D77,
 
 
 int  board[board_height][board_width] = {};
-int nsteps[board_height][board_width] = {};
 
 int parse_wire(char wire[], int wire_size, int wire_flag)
 {
@@ -149,7 +148,7 @@ int parse_wire(char wire[], int wire_size, int wire_flag)
     return 0;
 }
 
-int steps_to_first_intersection(char wire[], int wire_size, int wire_flag)
+int steps_to_first_intersection(char wire[], int wire_size)
 {
     // Start at the origin
     int position[2] = {origin[0], origin[1]};
@@ -164,6 +163,7 @@ int steps_to_first_intersection(char wire[], int wire_size, int wire_flag)
     int dx = 0; // Width change per step
     int dy = 0; // Height change per step
     int steps_taken = 0;
+    int nsteps[10][10];
 
     // Loop through the instructons, parsing them onto the board
     int i = 0;
@@ -216,12 +216,19 @@ int steps_to_first_intersection(char wire[], int wire_size, int wire_flag)
 
             steps_taken++;
 
-            if (board[position[0]][position[1]] == 4)
+            if (board[position[0]][position[1]] > 4)
             {
-                // printf("Done wire! nsteps is %d\n\n", nsteps);
-                cout << "nsteps is " << nsteps << endl;
-                nsteps[position[0]][position[1]] += steps_taken;
+                // printf(
+                //     "Adding %d steps to the intersection at position %d %d\n",
+                //     steps_taken, position[0], position[1]
+                // );
+                board[position[0]][position[1]] += steps_taken;
             }
+            else if (board[position[0]][position[1]] == 4)
+            {
+                board[position[0]][position[1]] = steps_taken;
+            }
+
 
             if ((position[0] >= board_height) or (position[1] >= board_width))
             {
@@ -232,6 +239,92 @@ int steps_to_first_intersection(char wire[], int wire_size, int wire_flag)
     }
 
     return 0;
+}
+int get_shortest_nsteps(char wire[], int wire_size)
+{
+    // Start at the origin
+    int position[2] = {origin[0], origin[1]};
+
+    // For parsing the instruction
+    char dir;
+    int len;
+    int k;
+    int j;
+
+    // For getting the array slices
+    int dx = 0; // Width change per step
+    int dy = 0; // Height change per steps_taken
+
+    int shortest_nsteps = 999999999;
+
+    // Loop through the instructons, parsing them onto the board
+    int i = 0;
+    while (i<wire_size-1)
+    {
+        dir = wire[i];
+
+        j=1;
+        while (isdigit(wire[i+j]))
+        {
+            j++;
+        }
+
+        string s = "";
+        for (k=1; k<j; k++)
+        {
+            s = s + wire[i+k];
+        }
+        len = stoi(s);
+
+        // Incriment i
+        i += j+1;
+
+        // Which direction are we travelling?
+        switch (dir)
+        {
+            case 'R':
+                dx = 1;
+                dy = 0;
+                break;
+            case 'U':
+                dx = 0;
+                dy = 1;
+                break;
+            case 'L':
+                dx = -1;
+                dy = 0;
+                break;
+            case 'D':
+                dx = 0;
+                dy = -1;
+                break;
+        }
+
+        // Execute that move
+        for (k=0; k < len; k++)
+        {
+            position[0] += dx;
+            position[1] += dy;
+
+            if (board[position[0]][position[1]] > 4)
+            {
+                printf("Found an intersection that is %d steps away\n\n", board[position[0]][position[1]]);
+                if (board[position[0]][position[1]] < shortest_nsteps)
+                {
+                    shortest_nsteps = board[position[0]][position[1]];
+                }
+            }
+
+
+            if ((position[0] >= board_height) or (position[1] >= board_width))
+            {
+                printf("OUT OF BOUNDS!!!!!\nPosition %d %d\n\n", position[0], position[1]);
+            }
+        }
+        // cout << "Position is now " << position[0] << ", " << position[1] << endl << endl;
+    }
+
+    return shortest_nsteps;
 }
 
 int main(void)
@@ -249,24 +342,12 @@ int main(void)
     parse_wire(W2, wire_size, 3);
 
     wire_size = sizeof(W1)/sizeof(*W1);
-    steps_to_first_intersection(W1, wire_size, 2);
+    steps_to_first_intersection(W1, wire_size);
 
     wire_size = sizeof(W2)/sizeof(*W2);
-    steps_to_first_intersection(W2, wire_size, 3);
+    steps_to_first_intersection(W2, wire_size);
 
-    int shortest_nsteps = 9999;
-    for (int i=0; i<board_height; i++)
-    {
-        for (int j=0; j<board_width; j++)
-        {
-            if ((nsteps[j][i] < shortest_nsteps) and (nsteps[j][i] > 0))
-            {
-                shortest_nsteps = nsteps[j][i];
-            }
-        }
-    }
-
-    cout << shortest_nsteps << endl;
+    cout << get_shortest_nsteps(W2, wire_size) << endl;
 
     // bool DEBUG = true;
     // if (DEBUG) printf("\n\nBoard final state:\n");
