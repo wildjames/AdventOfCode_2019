@@ -80,6 +80,14 @@ class Computer():
         if self.DEBUG:
             print(self.tape)
 
+    def extend_tape(self, N):
+        while True:
+            try:
+                self.tape[N]
+                break
+            except IndexError:
+                self.tape.append(0)
+
     def get_instruction(self):
         str_opcode = "{:>05s}".format(str(self.tape[self.i]))
         opcode = str_opcode[-2:]
@@ -114,28 +122,15 @@ class Computer():
             if self.DEBUG:
                 print("i: {}".format(i))
                 print("Number: {} - Mode: {}".format(n, m))
+
             if m == 0:
-                while True:
-                    try:
-                        args.append(self.tape[n])
-                        break
-                    except:
-                        if self.DEBUG:
-                            print("Extending memory")
-                        self.tape.append(0)
+                self.extend_tape(n)
+                args.append(self.tape[n])
 
             elif m == 1:
                 args.append(n)
                 if flag and i == self.SETS_MEM[opcode]:
-                    while True:
-                        try:
-                            self.tape[n]
-                            break
-                        except IndexError:
-                            if self.DEBUG:
-                                print("Extending memory to n = {}".format(n))
-                            self.tape.append(0)
-
+                    self.extend_tape(n)
 
             elif m == 2:
                 if self.DEBUG:
@@ -145,17 +140,11 @@ class Computer():
 
                 if flag and i == self.SETS_MEM[opcode]:
                     args.append(n + self.relative_base)
+                    self.extend_tape(n+self.relative_base)
                 else:
-                    while True:
-                        try:
-                            args.append(self.tape[n+self.relative_base])
-                            if self.DEBUG:
-                                print("using arg tape[{}+{}] = {}".format(n, self.relative_base, self.tape[n+self.relative_base]))
-                            break
-                        except:
-                            if self.DEBUG:
-                                print("Extending memory")
-                            self.tape.append(0)
+                    self.extend_tape(n+self.relative_base)
+                    args.append(self.tape[n+self.relative_base])
+
         if self.DEBUG:
             print("Args is now: {}".format(args))
 
@@ -280,4 +269,5 @@ with open("day9.txt", 'r') as tape_file:
 
 BOOST = Computer(tape, debug=False)
 BOOST.run()
-
+if BOOST.output == [76791]:
+    print("Success!")
