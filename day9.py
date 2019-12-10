@@ -105,9 +105,10 @@ class Computer():
         args = []
         self.i += nargs
 
-        # Handle modes here
-        modes = [int(mode) for mode in str_opcode[:3]][::-1]
+        ### Handle modes here
+        modes = [int(mode) for mode in str_opcode[-3::-1]]
 
+        # This flag gets raised if an argument sets a location in memory
         flag = False
         if opcode in self.SETS_MEM.keys():
             if self.DEBUG:
